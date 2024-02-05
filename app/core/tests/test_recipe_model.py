@@ -8,7 +8,7 @@ from django.test import TestCase
 from core import models
 
 
-class RecipeTest(TestCase):
+class RecipeModelTest(TestCase):
     """Test recipe object"""
 
     def test_creaet_recipe_object(self):
