@@ -2,13 +2,15 @@
 
 from decimal import Decimal
 
-from core.models import Recipe
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
-from recipe.serializers import RecipeDetailSerializer, RecipeSerializer
 from rest_framework import status
 from rest_framework.test import APIClient
+
+from core.models import Recipe
+from recipe.serializers import RecipeDetailSerializer, RecipeSerializer
+
 
 RECIPES_URL = reverse("recipe:recipe-list")
 
@@ -20,13 +22,15 @@ def detail_url(recipe_id):
 
 def create_recipe(user, **params):
     """Create and return sample recipe"""
+
     defaults = {
         "title": "sample recipe name",
         "description": "sample recipe description",
         "price": Decimal("5.89"),
         "duration": 20,
     }
-    recipe = Recipe.objects.create(user, **defaults)
+    defaults.update(params)
+    recipe = Recipe.objects.create(user=user, **defaults)
 
     return recipe
 
@@ -56,28 +60,27 @@ class PrivetRecipeAPITests(TestCase):
 
         self.client.force_authenticate(self.user)
 
-    def test_retrieve_recipe_list(self):
-        """Test retrieve list of recipe"""
-
-        create_recipe(self.user)
-        create_recipe(self.user)
+    def test_retrieve_recipes(self):
+        """Test retrieving a list of recipes."""
+        create_recipe(user=self.user)
+        create_recipe(user=self.user)
 
         res = self.client.get(RECIPES_URL)
-        recipes = Recipe.objects.all().order_by("-id")
-        serializer = RecipeSerializer(recipes, many=True)
 
+        recipes = Recipe.objects.all().order_by('-id')
+        serializer = RecipeSerializer(recipes, many=True)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
-        self.assertIn(res.data, serializer.data)
+        self.assertEqual(res.data, serializer.data)
 
     def test_recipe_list_limited_to_user(self):
         """Test list of recipe limited to authenticated user"""
 
-        other_user = get_user_model(
+        other_user = get_user_model().objects.create_user(
             email="other@example.com",
             password="otherpass123",
         )
-        create_recipe(other_user)
-        create_recipe(self.user)
+        create_recipe(user=other_user)
+        create_recipe(user=self.user)
 
         res = self.client.get(RECIPES_URL)
 
@@ -89,14 +92,14 @@ class PrivetRecipeAPITests(TestCase):
 
     def test_retrieve_recipe_detail(self):
         """Test get recipe detail."""
-        recipe = create_recipe(self.user)
+        recipe = create_recipe(user=self.user)
 
         url = detail_url(recipe.id)
 
         res = self.client.get(url)
         serializer = RecipeDetailSerializer(recipe)
 
-        self.assertEqual(res.data, status.HTTP_200_OK)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data, serializer.data)
 
     def test_create_recipe(self):
@@ -113,7 +116,7 @@ class PrivetRecipeAPITests(TestCase):
 
         recipe = Recipe.objects.get(id=res.data["id"])
 
-        for k, v in payload:
+        for k, v in payload.items():
             self.assertEqual(getattr(recipe, k), v)
         self.assertEqual(recipe.user, self.user)
 
@@ -124,7 +127,7 @@ class PrivetRecipeAPITests(TestCase):
             "title": original_title,
             "description": "sample recipe description",
         }
-        recipe = create_recipe(payload)
+        recipe = create_recipe(user=self.user, **payload)
         url = detail_url(recipe.id)
         res = self.client.patch(url, payload)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
@@ -144,14 +147,15 @@ class PrivetRecipeAPITests(TestCase):
             "price": Decimal("3.23"),
         }
 
-        recipe = create_recipe(self.user)
+        recipe = create_recipe(user=self.user)
         url = detail_url(recipe.id)
-        res = self.client.post(url, payload)
+
+        res = self.client.put(url, payload)
 
         self.assertEqual(res.status_code, status.HTTP_200_OK)
-        recipe.refresh_form_db()
+        recipe.refresh_from_db()
 
-        for k, v in payload:
+        for k, v in payload.items():
             self.assertEqual(getattr(recipe, k), v)
 
         self.assertEqual(recipe.user, self.user)
@@ -159,10 +163,10 @@ class PrivetRecipeAPITests(TestCase):
     def test_update_user_returns_error(self):
         """Test changing the recipe user results in an error"""
 
-        new_user = get_user_model.objects.create_user(
+        new_user = get_user_model().objects.create_user(
             email="newuser@example.com", password="testpass12345"
         )
-        recipe = create_recipe(self.user)
+        recipe = create_recipe(user=self.user)
         url = detail_url(recipe.id)
         payload = {"user": new_user.id}
 
@@ -174,7 +178,7 @@ class PrivetRecipeAPITests(TestCase):
 
     def test_delete_recipe(self):
         """Test deleting recipe successful"""
-        recipe = create_recipe(self.user)
+        recipe = create_recipe(user=self.user)
 
         url = detail_url(recipe.id)
         res = self.client.delete(url)
@@ -186,7 +190,7 @@ class PrivetRecipeAPITests(TestCase):
     def test_delete_other_user_recipe(self):
         """Test trying delete another users recipe give error"""
 
-        new_user = get_user_model.objects.create_user(
+        new_user = get_user_model().objects.create_user(
             email="newuser@example.com", password="testpass12345"
         )
 
