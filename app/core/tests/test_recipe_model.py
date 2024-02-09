@@ -11,7 +11,7 @@ from core import models
 class RecipeModelTest(TestCase):
     """Test recipe object"""
 
-    def test_creaet_recipe_object(self):
+    def test_create_recipe_object(self):
         """Test a Creating Recipe is successful."""
 
         user = get_user_model().objects.create_user(
