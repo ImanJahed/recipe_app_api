@@ -1,6 +1,6 @@
 from django.contrib import admin  # noqa
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from core.models import User, Recipe
+from core.models import User, Recipe, Tag, Ingredient
 
 # Register your models here.
 
@@ -42,3 +42,5 @@ class UserAdmin(BaseUserAdmin):
 
 admin.site.register(User, UserAdmin)
 admin.site.register(Recipe)
+admin.site.register(Tag)
+admin.site.register(Ingredient)

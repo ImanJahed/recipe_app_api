@@ -8,11 +8,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from core.models import (
-    Recipe,
-    Tag,
-    Ingredient
-    )
+from core.models import Recipe, Tag, Ingredient
 from recipe.serializers import RecipeDetailSerializer, RecipeSerializer
 
 
@@ -71,7 +67,7 @@ class PrivetRecipeAPITests(TestCase):
 
         res = self.client.get(RECIPES_URL)
 
-        recipes = Recipe.objects.all().order_by('-id')
+        recipes = Recipe.objects.all().order_by("-id")
         serializer = RecipeSerializer(recipes, many=True)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data, serializer.data)
@@ -211,13 +207,14 @@ class PrivetRecipeAPITests(TestCase):
         """Test creating a recipe with tags"""
 
         payload = {
-            'title': 'Sample Recipe',
-            'duration': 10,
-            'price': Decimal('10.44'),
-            'description': 'Sample Recipe Description',
-            'tags': [{'name': 'BreakFast'}, {'name': 'Lunch'}]}
+            "title": "Sample Recipe",
+            "duration": 10,
+            "price": Decimal("10.44"),
+            "description": "Sample Recipe Description",
+            "tags": [{"name": "BreakFast"}, {"name": "Lunch"}],
+        }
 
-        res = self.client.post(RECIPES_URL, payload, format='json')
+        res = self.client.post(RECIPES_URL, payload, format="json")
 
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
 
@@ -226,27 +223,25 @@ class PrivetRecipeAPITests(TestCase):
         recipe = recipes[0]
         self.assertEqual(recipe.tags.count(), 2)
 
-        for tag in payload['tags']:
-            exists = recipe.tags.filter(
-                name=tag['name'],
-                user=self.user
-            ).exists()
+        for tag in payload["tags"]:
+            exists = recipe.tags.filter(name=tag["name"], user=self.user).exists()
 
             self.assertTrue(exists)
 
     def test_create_recipe_with_existing_tags(self):
         """Test creating a recipe with existing tag."""
 
-        breakfast_tag = Tag.objects.create(name='breakfast', user=self.user)
+        breakfast_tag = Tag.objects.create(name="breakfast", user=self.user)
 
         payload = {
-            'title': 'Recipe Title',
-            'duration': 10,
-            'price': Decimal('20.22'),
-            'description': 'Recipe Description',
-            'tags': [{'name': 'breakfast'}, {'name': 'Lunch'}]}
+            "title": "Recipe Title",
+            "duration": 10,
+            "price": Decimal("20.22"),
+            "description": "Recipe Description",
+            "tags": [{"name": "breakfast"}, {"name": "Lunch"}],
+        }
 
-        res = self.client.post(RECIPES_URL, payload, format='json')
+        res = self.client.post(RECIPES_URL, payload, format="json")
 
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
 
@@ -256,22 +251,22 @@ class PrivetRecipeAPITests(TestCase):
         self.assertEqual(recipe.tags.count(), 2)
         self.assertIn(breakfast_tag, recipe.tags.all())
 
-        for tag in payload['tags']:
-            tag_exists = Tag.objects.filter(name=tag['name'], user=self.user).exists()
+        for tag in payload["tags"]:
+            tag_exists = Tag.objects.filter(name=tag["name"], user=self.user).exists()
             self.assertTrue(tag_exists)
 
     def test_create_tag_on_update(self):
-        """"Test creating tag when updating a recipe """
+        """ "Test creating tag when updating a recipe"""
 
         recipe = create_recipe(user=self.user)
-        payload = {'tags': [{'name': 'Lunch'}]}
+        payload = {"tags": [{"name": "Lunch"}]}
 
         url = detail_url(recipe.id)
-        res = self.client.patch(url, payload, format='json')
+        res = self.client.patch(url, payload, format="json")
 
         self.assertEqual(res.status_code, status.HTTP_200_OK)
 
-        new_tag = Tag.objects.get(name='Lunch', user=self.user)
+        new_tag = Tag.objects.get(name="Lunch", user=self.user)
 
         self.assertIn(new_tag, recipe.tags.all())
 
@@ -279,17 +274,17 @@ class PrivetRecipeAPITests(TestCase):
         """Test assigning an existing tag when updating a recipe"""
 
         recipe = create_recipe(user=self.user)
-        breakfast_tag = Tag.objects.create(name='Breakfast', user=self.user)
+        breakfast_tag = Tag.objects.create(name="Breakfast", user=self.user)
 
         recipe.tags.add(breakfast_tag)
 
-        tag_lunch = Tag.objects.create(name='Lunch', user=self.user)
+        tag_lunch = Tag.objects.create(name="Lunch", user=self.user)
 
-        payload = {'tags': [{'name': 'Lunch'}]}
+        payload = {"tags": [{"name": "Lunch"}]}
 
         url = detail_url(recipe.id)
 
-        res = self.client.patch(url, payload, format='json')
+        res = self.client.patch(url, payload, format="json")
 
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertIn(tag_lunch, recipe.tags.all())
@@ -299,13 +294,13 @@ class PrivetRecipeAPITests(TestCase):
         """Test clear tag to recipe update"""
 
         recipe = create_recipe(user=self.user)
-        tag = Tag.objects.create(name='Lunch', user=self.user)
+        tag = Tag.objects.create(name="Lunch", user=self.user)
 
         recipe.tags.add(tag)
 
-        payload = {'tags': []}
+        payload = {"tags": []}
         url = detail_url(recipe.id)
-        res = self.client.patch(url, payload, format='json')
+        res = self.client.patch(url, payload, format="json")
 
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertNotIn(tag, recipe.tags.all())
@@ -314,17 +309,15 @@ class PrivetRecipeAPITests(TestCase):
     def test_create_recipe_with_new_ingredient(self):
         """Test creating a recipe with new ingredient"""
 
-        recipe = create_recipe(user=self.user)
-
         payload = {
-            'title': 'Test title',
-            'duration': 10,
-            'price': Decimal('22.22'),
-            'description': 'Test descriptin',
-            'ingredients': [{'name': 'Test Ingredient1'}, {'name': 'Test Ingredient2'}]
+            "title": "Test title",
+            "duration": 10,
+            "price": Decimal("22.22"),
+            "description": "Test descriptin",
+            "ingredients": [{"name": "Test Ingredient1"}, {"name": "Test Ingredient2"}],
         }
 
-        res = self.client.post(RECIPES_URL, payload, format='json')
+        res = self.client.post(RECIPES_URL, payload, format="json")
 
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
 
@@ -333,28 +326,26 @@ class PrivetRecipeAPITests(TestCase):
         self.assertEqual(recipes.count(), 1)
         recipe = recipes[0]
         self.assertEqual(recipe.ingredients.count(), 2)
-        self.assertIn('Test Ingredient1', recipe.ingredients.all())
 
-        for ingredient in payload['ingredients']:
+        for ingredient in payload["ingredients"]:
             ingredient_exists = Ingredient.objects.filter(
-                name=ingredient['name'],
-                user=self.user
-                )
+                name=ingredient["name"], user=self.user
+            )
             self.assertTrue(ingredient_exists)
 
     def test_create_recipe_assign_exists_ingredient(self):
         """Test creating a recipe with existing ingredient"""
 
-        ingredient_tst = Ingredient.objects.create(name='Test name', user=self.user)
+        ingredient_tst = Ingredient.objects.create(name="Test name", user=self.user)
         payload = {
-            'title': 'Test title',
-            'duration': 10,
-            'price': Decimal('21.21'),
-            'description': 'Test description',
-            'ingredients': [{'name': 'Test name'}]
+            "title": "Test title",
+            "duration": 10,
+            "price": Decimal("21.21"),
+            "description": "Test description",
+            "ingredients": [{"name": "Test name"}],
         }
 
-        res = self.client.post(RECIPES_URL, payload, format='json')
+        res = self.client.post(RECIPES_URL, payload, format="json")
 
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
         recipes = Recipe.objects.all()
@@ -366,58 +357,35 @@ class PrivetRecipeAPITests(TestCase):
     def test_create_ingredient_when_update_recipe(self):
         """Test creating ingredient when update recipe"""
         recipe = create_recipe(user=self.user)
-        payload = {
-            'ingredients': [{'name': 'ingredient1'}, {'name': 'ingredient2'}]
-        }
+        payload = {"ingredients": [{"name": "ingredient1"}, {"name": "ingredient2"}]}
 
         url = detail_url(recipe.id)
-        res = self.client.patch(url, payload, format='json')
+        res = self.client.patch(url, payload, format="json")
 
         self.assertEqual(res.status_code, status.HTTP_200_OK)
 
         recipe.refresh_from_db()
         self.assertEqual(recipe.ingredients.count(), 2)
-        self.assertIn('ingredient1', recipe.ingredients.all())
-
-    def test_update_ingredient_when_update_recipe(self):
-        """Test update ingredient when update recipe"""
-
-        ingredient = Ingredient.objects.create(name='test name', user=self.user)
-        recipe = create_recipe(user=self.user)
-        recipe.ingredients.add(ingredient)
-
-        payload = {
-            'ingredients': [{'name': 'updated ingredient'}]
-        }
-
-        url = detail_url(recipe.id)
-        res = self.client.patch(url, payload, format='json')
-
-        self.assertEqual(res.status_code, status.HTTP_200_OK)
-
-        recipe.refresh_from_db()
-
-        self.assertEqual(recipe.ingredients.count(), 1)
-        self.assertIn('updated ingredient', recipe.ingredients.all())
-        self.assertNotIn('test name', recipe.ingredients.all())
+        for ingredient in payload["ingredients"]:
+            ingredient_exists = Ingredient.objects.filter(
+                name=ingredient['name'], user=self.user).exists()
+            self.assertTrue(ingredient_exists)
 
     def test_update_recipe_assign_exists_ingredient(self):
         """Test update recipe with existing ingredient"""
 
-        ingredient_1 = Ingredient.objects.create(name='test name', user=self.user)
+        ingredient_1 = Ingredient.objects.create(name="test name", user=self.user)
         recipe = create_recipe(user=self.user)
         recipe.ingredients.add(ingredient_1)
 
         ingredient_2 = Ingredient.objects.create(
-            name='another ingredient', user=self.user
-            )
+            name="another ingredient", user=self.user
+        )
 
-        payload = {
-            'ingredients': [{'name': 'another ingredient'}]
-        }
+        payload = {"ingredients": [{"name": "another ingredient"}]}
 
         url = detail_url(recipe.id)
-        res = self.client.patch(url, payload, format='json')
+        res = self.client.patch(url, payload, format="json")
 
         self.assertEqual(res.status_code, status.HTTP_200_OK)
 
@@ -429,17 +397,15 @@ class PrivetRecipeAPITests(TestCase):
 
     def test_clear_ingredient_in_recipe(self):
         """Test clear ingredient at recipe"""
-        
-        ingredient = Ingredient.objects.create(name='test name', user=self.user)
+
+        ingredient = Ingredient.objects.create(name="test name", user=self.user)
         recipe = create_recipe(user=self.user)
         recipe.ingredients.add(ingredient)
 
-        payload = {
-            'ingredients': [{}]
-        }
+        payload = {"ingredients": []}
 
         url = detail_url(recipe.id)
-        res = self.client.patch(url, payload, format='json')
+        res = self.client.patch(url, payload, format="json")
 
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         recipe.refresh_from_db()

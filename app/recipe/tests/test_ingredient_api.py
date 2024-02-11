@@ -62,7 +62,7 @@ class PrivateIngredientTests(TestCase):
         self.assertEqual(res.data, serializer.data)
         self.assertEqual(ingredients.count(), 2)
         ingredient = ingredients[0]
-        self.assertEqual(ingredient.name, "Ingredient1")
+        self.assertEqual(ingredient.name, "Ingredient2")
 
     def test_ingredient_limited_to_user(self):
         """Test list of ingredient is limited to authenticated user"""
@@ -76,8 +76,8 @@ class PrivateIngredientTests(TestCase):
 
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(len(res.data), 1)
-        self.assertEqual(res.data["name"], ingredient.name)
-        self.assertEqual(res.data["id"], ingredient.id)
+        self.assertEqual(res.data[0]["name"], ingredient.name)
+        self.assertEqual(res.data[0]["id"], ingredient.id)
 
     def test_update_ingredient(self):
         """Test update ingredient"""
@@ -89,7 +89,8 @@ class PrivateIngredientTests(TestCase):
 
         self.assertEqual(res.status_code, status.HTTP_200_OK)
 
-        ingredient.refresh_form_db()
+        ingredient.refresh_from_db()
+
         self.assertEqual(ingredient.name, payload["name"])
 
     def test_delete_ingredient(self):
@@ -102,5 +103,5 @@ class PrivateIngredientTests(TestCase):
 
         self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
 
-        exists_ingredient = Ingredient.objects.get(user=self.user).exists()
+        exists_ingredient = Ingredient.objects.filter(user=self.user).exists()
         self.assertFalse(exists_ingredient)
