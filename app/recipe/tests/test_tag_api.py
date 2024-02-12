@@ -1,5 +1,6 @@
 """Test Tag API"""
 
+from decimal import Decimal
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
@@ -102,3 +103,26 @@ class PrivetTagApiTest(TestCase):
         tags_exists = models.Tag.objects.filter(user=self.user).exists()
 
         self.assertFalse(tags_exists)
+
+    def test_filter_tags_assigned_to_recipe(self):
+        """Test listing tags by those assigned to recipe"""
+
+        t1 = models.Tag.objects.create(name='Tag1', user=self.user)
+        t2 = models.Tag.objects.create(name='Tag2', user=self.user)
+
+        r1 = models.Recipe.objects.create(
+            title='Title for ing1',
+            duration=50,
+            price=Decimal('44.00'),
+            description='Description for ing1',
+            user=self.user
+        )
+        r1.tags.add(t1)
+
+        res = self.client.get(TAGS_URL, {'assigned_only': 1})
+
+        s1 = TagSerializer(t1)
+        s2 = TagSerializer(t2)
+
+        self.assertIn(s1.data, res.data)
+        self.assertNotIn(s2.data, res.data)

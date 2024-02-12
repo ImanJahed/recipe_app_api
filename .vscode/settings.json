@@ -90,7 +90,10 @@
         "codeSource": true,
         "codeOutput": true
     },
-    "editor.fontFamily": " Consolas, 'Courier New', monospace",
+    "editor.fontFamily": "Consolas, 'Courier New', monospace",
+    // "editor.fontFamily": "Fira Code",
+    "editor.fontLigatures": true,
+    "editor.fontWeight": "normal",
     "files.insertFinalNewline": true,
     "notebook.lineNumbers": "on",
     "files.trimTrailingWhitespace": true,
@@ -205,7 +208,8 @@
             }
         }
     ]
-}
+},
+"terminal.integrated.mouseWheelZoom": true
 
 
 }

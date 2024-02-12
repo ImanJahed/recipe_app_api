@@ -1,5 +1,6 @@
 """Test Ingredient APIs"""
 
+from decimal import Decimal
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
@@ -7,7 +8,7 @@ from django.urls import reverse
 from rest_framework.test import APIClient
 from rest_framework import status
 
-from core.models import Ingredient
+from core.models import Ingredient, Recipe
 from recipe import serializers
 
 
@@ -105,3 +106,27 @@ class PrivateIngredientTests(TestCase):
 
         exists_ingredient = Ingredient.objects.filter(user=self.user).exists()
         self.assertFalse(exists_ingredient)
+
+    def test_filter_ingredients_assigned_to_recipe(self):
+        """Test listing ingredient by those assigned to recipe"""
+
+        ing1 = Ingredient.objects.create(name='Ingredient1', user=self.user)
+        ing2 = Ingredient.objects.create(name='Ingredient1', user=self.user)
+
+        r1 = Recipe.objects.create(
+            title='Title for ing1',
+            duration=50,
+            price=Decimal('44.00'),
+            description='Description for ing1',
+            user=self.user
+        )
+
+        r1.ingredients.add(ing1)
+
+        res = self.client.get(INGREDIENT_URLS, {'assigned_only': 1})
+
+        s1 = serializers.IngredientSerializer(ing1)
+        s2 = serializers.IngredientSerializer(ing2)
+
+        self.assertIn(s1.data, res.data)
+        self.assertNotIn(s2.data, res.data)
